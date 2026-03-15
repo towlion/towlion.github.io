@@ -446,27 +446,6 @@
 
     footer a:hover { color: var(--text); }
 
-    /* Architecture diagram */
-    .arch-diagram {
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 2rem;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 0.8rem;
-      line-height: 1.7;
-      color: var(--text-muted);
-      overflow-x: auto;
-      white-space: pre;
-      text-align: left;
-    }
-
-    .arch-highlight { color: var(--accent); }
-    .arch-accent2 { color: var(--accent2); }
-    .arch-text { color: var(--text); }
-
     /* Responsive */
     @media (max-width: 768px) {
       nav { padding: 0.8rem 1rem; }
@@ -599,21 +578,79 @@
       </div>
     </div>
 
-    <div class="arch-diagram" style="margin-top: 4rem;">
-<span class="arch-text">              Your Server</span>
-<span class="arch-text">   ┌─────────────────────────────────┐</span>
-<span class="arch-text">   │</span>  <span class="arch-highlight">Caddy</span> <span class="arch-text">(reverse proxy + auto TLS)</span>  <span class="arch-text">│</span>
-<span class="arch-text">   │  ┌──────┐  ┌──────┐  ┌──────┐  │</span>
-<span class="arch-text">   │  │</span><span class="arch-accent2"> App1 </span><span class="arch-text">│  │</span><span class="arch-accent2"> App2 </span><span class="arch-text">│  │</span><span class="arch-accent2"> App3 </span><span class="arch-text">│  │</span>
-<span class="arch-text">   │  └──┬───┘  └──┬───┘  └──┬───┘  │</span>
-<span class="arch-text">   │     └─────────┼─────────┘      │</span>
-<span class="arch-text">   │  ┌────────┐ ┌─┴────┐ ┌──────┐  │</span>
-<span class="arch-text">   │  │</span><span class="arch-highlight">Postgres</span><span class="arch-text">│ │</span><span class="arch-highlight">Redis </span><span class="arch-text">│ │</span><span class="arch-highlight">MinIO </span><span class="arch-text">│  │</span>
-<span class="arch-text">   │  └────────┘ └──────┘ └──────┘  │</span>
-<span class="arch-text">   │  ┌──────┐ ┌────────┐ ┌───────┐ │</span>
-<span class="arch-text">   │  │</span><span class="arch-accent2"> Loki </span><span class="arch-text">│ │</span><span class="arch-accent2">Promtail</span><span class="arch-text">│ │</span><span class="arch-accent2">Grafana</span><span class="arch-text">│ │</span>
-<span class="arch-text">   │  └──────┘ └────────┘ └───────┘ │</span>
-<span class="arch-text">   └─────────────────────────────────┘</span></div>
+    <div style="max-width: 700px; margin: 4rem auto 0;">
+      <svg viewBox="0 0 520 400" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto;">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#6c63ff;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#00d4aa;stop-opacity:1" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        <!-- Title -->
+        <text x="260" y="28" text-anchor="middle" fill="#e4e4ef" font-family="Inter, sans-serif" font-size="15" font-weight="700">Your Server</text>
+
+        <!-- Outer box -->
+        <rect x="20" y="42" width="480" height="345" rx="12" fill="none" stroke="#1e1e2e" stroke-width="1.5" />
+        <rect x="20" y="42" width="480" height="345" rx="12" fill="#12121a" opacity="0.6" />
+
+        <!-- Caddy bar -->
+        <rect x="40" y="58" width="440" height="36" rx="8" fill="rgba(108,99,255,0.1)" stroke="rgba(108,99,255,0.25)" stroke-width="1" />
+        <text x="260" y="81" text-anchor="middle" fill="#6c63ff" font-family="Inter, sans-serif" font-size="13" font-weight="600">Caddy</text>
+        <text x="260" y="81" text-anchor="middle" fill="#8888a0" font-family="Inter, sans-serif" font-size="11" dx="28"> &mdash; reverse proxy + auto TLS</text>
+
+        <!-- App boxes row -->
+        <rect x="55" y="112" width="120" height="50" rx="8" fill="rgba(0,212,170,0.08)" stroke="rgba(0,212,170,0.25)" stroke-width="1" />
+        <text x="115" y="142" text-anchor="middle" fill="#00d4aa" font-family="Inter, sans-serif" font-size="13" font-weight="600">App 1</text>
+
+        <rect x="200" y="112" width="120" height="50" rx="8" fill="rgba(0,212,170,0.08)" stroke="rgba(0,212,170,0.25)" stroke-width="1" />
+        <text x="260" y="142" text-anchor="middle" fill="#00d4aa" font-family="Inter, sans-serif" font-size="13" font-weight="600">App 2</text>
+
+        <rect x="345" y="112" width="120" height="50" rx="8" fill="rgba(0,212,170,0.08)" stroke="rgba(0,212,170,0.25)" stroke-width="1" />
+        <text x="405" y="142" text-anchor="middle" fill="#00d4aa" font-family="Inter, sans-serif" font-size="13" font-weight="600">App 3</text>
+
+        <!-- Connection lines from apps down -->
+        <line x1="115" y1="162" x2="115" y2="190" stroke="#1e1e2e" stroke-width="1.5" />
+        <line x1="260" y1="162" x2="260" y2="190" stroke="#1e1e2e" stroke-width="1.5" />
+        <line x1="405" y1="162" x2="405" y2="190" stroke="#1e1e2e" stroke-width="1.5" />
+        <!-- Horizontal connector -->
+        <line x1="115" y1="190" x2="405" y2="190" stroke="#1e1e2e" stroke-width="1.5" />
+        <!-- Center drop -->
+        <line x1="260" y1="190" x2="260" y2="210" stroke="#1e1e2e" stroke-width="1.5" />
+        <!-- Fan out to data stores -->
+        <line x1="115" y1="190" x2="115" y2="210" stroke="#1e1e2e" stroke-width="1.5" />
+        <line x1="405" y1="190" x2="405" y2="210" stroke="#1e1e2e" stroke-width="1.5" />
+
+        <!-- Data stores row -->
+        <rect x="55" y="210" width="120" height="50" rx="8" fill="rgba(108,99,255,0.08)" stroke="rgba(108,99,255,0.2)" stroke-width="1" />
+        <text x="115" y="240" text-anchor="middle" fill="#6c63ff" font-family="Inter, sans-serif" font-size="13" font-weight="600">PostgreSQL</text>
+
+        <rect x="200" y="210" width="120" height="50" rx="8" fill="rgba(108,99,255,0.08)" stroke="rgba(108,99,255,0.2)" stroke-width="1" />
+        <text x="260" y="240" text-anchor="middle" fill="#6c63ff" font-family="Inter, sans-serif" font-size="13" font-weight="600">Redis</text>
+
+        <rect x="345" y="210" width="120" height="50" rx="8" fill="rgba(108,99,255,0.08)" stroke="rgba(108,99,255,0.2)" stroke-width="1" />
+        <text x="405" y="240" text-anchor="middle" fill="#6c63ff" font-family="Inter, sans-serif" font-size="13" font-weight="600">MinIO</text>
+
+        <!-- Observability row -->
+        <rect x="55" y="290" width="120" height="50" rx="8" fill="rgba(0,212,170,0.06)" stroke="rgba(0,212,170,0.18)" stroke-width="1" />
+        <text x="115" y="320" text-anchor="middle" fill="#00d4aa" font-family="Inter, sans-serif" font-size="13" font-weight="600">Loki</text>
+
+        <rect x="200" y="290" width="120" height="50" rx="8" fill="rgba(0,212,170,0.06)" stroke="rgba(0,212,170,0.18)" stroke-width="1" />
+        <text x="260" y="320" text-anchor="middle" fill="#00d4aa" font-family="Inter, sans-serif" font-size="13" font-weight="600">Promtail</text>
+
+        <rect x="345" y="290" width="120" height="50" rx="8" fill="rgba(0,212,170,0.06)" stroke="rgba(0,212,170,0.18)" stroke-width="1" />
+        <text x="405" y="320" text-anchor="middle" fill="#00d4aa" font-family="Inter, sans-serif" font-size="13" font-weight="600">Grafana</text>
+
+        <!-- Row labels -->
+        <text x="30" y="140" text-anchor="middle" fill="#555570" font-family="Inter, sans-serif" font-size="9" transform="rotate(-90, 30, 140)">APPS</text>
+        <text x="30" y="237" text-anchor="middle" fill="#555570" font-family="Inter, sans-serif" font-size="9" transform="rotate(-90, 30, 237)">DATA</text>
+        <text x="30" y="318" text-anchor="middle" fill="#555570" font-family="Inter, sans-serif" font-size="9" transform="rotate(-90, 30, 318)">OBS</text>
+      </svg>
+    </div>
   </section>
 
   <!-- Tech Stack -->

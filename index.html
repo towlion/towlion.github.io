@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Towlion - Self-Hosted GitHub-Native Micro-PaaS</title>
+  <meta name="description" content="Deploy full web applications to your own server directly from GitHub. No dashboards, no control planes — just Git push and deploy.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg-card: #12121a;
+      --bg-card-hover: #1a1a25;
+      --border: #1e1e2e;
+      --text: #e4e4ef;
+      --text-muted: #8888a0;
+      --accent: #6c63ff;
+      --accent-glow: rgba(108, 99, 255, 0.3);
+      --accent2: #00d4aa;
+      --accent2-glow: rgba(0, 212, 170, 0.2);
+      --gradient: linear-gradient(135deg, #6c63ff, #00d4aa);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    .bg-grid {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(rgba(108, 99, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(108, 99, 255, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      z-index: -1;
+    }
+
+    .glow-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: -1;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .glow-orb-1 {
+      width: 600px; height: 600px;
+      background: rgba(108, 99, 255, 0.08);
+      top: -200px; right: -100px;
+    }
+
+    .glow-orb-2 {
+      width: 500px; height: 500px;
+      background: rgba(0, 212, 170, 0.06);
+      bottom: -100px; left: -100px;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      33% { transform: translate(30px, -30px); }
+      66% { transform: translate(-20px, 20px); }
+    }
+
+    /* Nav */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 800;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links { display: flex; gap: 2rem; align-items: center; }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.4rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--gradient);
+      color: white;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 30px var(--accent-glow);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 8rem 2rem 4rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      background: rgba(108, 99, 255, 0.1);
+      border: 1px solid rgba(108, 99, 255, 0.2);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent2);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 .gradient-text {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+      line-height: 1.7;
+    }
+
+    .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+
+    /* Terminal demo */
+    .terminal {
+      width: 100%;
+      max-width: 650px;
+      margin: 4rem auto 0;
+      background: #0d0d14;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      text-align: left;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.8rem 1rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .terminal-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    .terminal-dot:nth-child(1) { background: #ff5f57; }
+    .terminal-dot:nth-child(2) { background: #febc2e; }
+    .terminal-dot:nth-child(3) { background: #28c840; }
+
+    .terminal-body {
+      padding: 1.2rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.8;
+    }
+
+    .terminal-line { display: block; }
+
+    .terminal-prompt { color: var(--accent2); }
+    .terminal-cmd { color: var(--text); }
+    .terminal-comment { color: #555570; }
+    .terminal-output { color: var(--text-muted); }
+    .terminal-success { color: var(--accent2); }
+
+    /* Sections */
+    section { padding: 6rem 2rem; }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-header h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+
+    .section-header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Features grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      padding: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(108, 99, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .feature-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      background: rgba(108, 99, 255, 0.1);
+      border: 1px solid rgba(108, 99, 255, 0.15);
+    }
+
+    .feature-card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* How it works */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .step {
+      text-align: center;
+      position: relative;
+    }
+
+    .step-number {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: var(--gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      margin: 0 auto 1.2rem;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .step h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .step p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Stack */
+    .stack-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .stack-item {
+      padding: 0.8rem 1.4rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .stack-item:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    /* CTA */
+    .cta {
+      text-align: center;
+      padding: 6rem 2rem;
+      position: relative;
+    }
+
+    .cta::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+    }
+
+    .cta h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+
+    .cta p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    /* Footer */
+    footer {
+      padding: 2rem;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer a:hover { color: var(--text); }
+
+    /* Architecture diagram */
+    .arch-diagram {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: var(--text-muted);
+      overflow-x: auto;
+      white-space: pre;
+      text-align: left;
+    }
+
+    .arch-highlight { color: var(--accent); }
+    .arch-accent2 { color: var(--accent2); }
+    .arch-text { color: var(--text); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      nav { padding: 0.8rem 1rem; }
+      .nav-links { gap: 1rem; }
+      .nav-links a:not(.btn) { display: none; }
+      section { padding: 4rem 1.5rem; }
+      .features-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="glow-orb glow-orb-1"></div>
+  <div class="glow-orb glow-orb-2"></div>
+
+  <nav>
+    <div class="logo">towlion</div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="https://towlion.github.io/platform/" target="_blank">Docs</a>
+      <a href="https://github.com/towlion" target="_blank" class="btn btn-secondary">GitHub</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="badge">Open Source Micro-PaaS</div>
+    <h1>
+      Your server.<br>
+      Your code.<br>
+      <span class="gradient-text">Just git push.</span>
+    </h1>
+    <p>
+      A self-hosted platform that turns a single server into a multi-app deployment machine.
+      GitHub is your control plane. No vendor lock-in. No monthly bills from a PaaS.
+    </p>
+    <div class="hero-buttons">
+      <a href="https://towlion.github.io/platform/tutorial/" class="btn btn-primary">
+        Get Started
+      </a>
+      <a href="https://towlion.github.io/platform/" class="btn btn-secondary">
+        Read the Docs
+      </a>
+    </div>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <span class="terminal-dot"></span>
+        <span class="terminal-dot"></span>
+        <span class="terminal-dot"></span>
+      </div>
+      <div class="terminal-body">
+        <span class="terminal-line"><span class="terminal-comment"># Bootstrap your server</span></span>
+        <span class="terminal-line"><span class="terminal-prompt">$ </span><span class="terminal-cmd">sudo bash bootstrap-server.sh</span></span>
+        <span class="terminal-line"><span class="terminal-output">  Installing Docker, Caddy, PostgreSQL, Redis...</span></span>
+        <span class="terminal-line"><span class="terminal-success">  Platform ready.</span></span>
+        <span class="terminal-line">&nbsp;</span>
+        <span class="terminal-line"><span class="terminal-comment"># Create an app from the template</span></span>
+        <span class="terminal-line"><span class="terminal-prompt">$ </span><span class="terminal-cmd">gh repo create my-app --template towlion/app-template</span></span>
+        <span class="terminal-line">&nbsp;</span>
+        <span class="terminal-line"><span class="terminal-comment"># Push to deploy</span></span>
+        <span class="terminal-line"><span class="terminal-prompt">$ </span><span class="terminal-cmd">git push origin main</span></span>
+        <span class="terminal-line"><span class="terminal-success">  Deployed to https://my-app.example.com</span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="section-header">
+      <h2>Everything you need, nothing you don't</h2>
+      <p>A complete deployment platform that lives entirely in GitHub. No dashboards to maintain, no APIs to learn.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F310;</div>
+        <h3>GitHub is the Control Plane</h3>
+        <p>Push to deploy. Open a PR to get a preview environment. Close the PR to clean it up. GitHub Actions handles everything.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F4E6;</div>
+        <h3>Multi-App Hosting</h3>
+        <p>Run multiple applications on a single server. Each gets its own subdomain, database, storage bucket, and isolated containers.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F512;</div>
+        <h3>Auto TLS</h3>
+        <p>Caddy handles HTTPS automatically. Every app and preview environment gets a valid TLS certificate with zero configuration.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F50D;</div>
+        <h3>Built-in Observability</h3>
+        <p>Centralized logging with Loki and Promtail. Grafana dashboards out of the box. Automated health alerts via GitHub Issues.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F500;</div>
+        <h3>Fork to Self-Host</h3>
+        <p>Fork any app repository, configure 4 secrets, push. You're running your own instance. That's the entire self-hosting guide.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F6E1;&#xFE0F;</div>
+        <h3>Production Ready</h3>
+        <p>Daily backups, automated security updates, resource limits, credential isolation, and firewall configuration out of the box.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how-it-works" style="background: rgba(255,255,255,0.01);">
+    <div class="section-header">
+      <h2>Three steps to production</h2>
+      <p>Go from zero to deployed in minutes, not days.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Bootstrap</h3>
+        <p>Run a single script on a fresh Debian server. It installs Docker, PostgreSQL, Redis, Caddy, and the observability stack.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Create</h3>
+        <p>Generate a new app from the template. It comes with FastAPI, database migrations, Docker config, and CI/CD workflows pre-configured.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Push</h3>
+        <p>Set 4 GitHub secrets and push to main. GitHub Actions builds, deploys, and configures your app automatically.</p>
+      </div>
+    </div>
+
+    <div class="arch-diagram" style="margin-top: 4rem;">
+<span class="arch-text">              Your Server</span>
+<span class="arch-text">   ┌─────────────────────────────────┐</span>
+<span class="arch-text">   │</span>  <span class="arch-highlight">Caddy</span> <span class="arch-text">(reverse proxy + auto TLS)</span>  <span class="arch-text">│</span>
+<span class="arch-text">   │  ┌──────┐  ┌──────┐  ┌──────┐  │</span>
+<span class="arch-text">   │  │</span><span class="arch-accent2"> App1 </span><span class="arch-text">│  │</span><span class="arch-accent2"> App2 </span><span class="arch-text">│  │</span><span class="arch-accent2"> App3 </span><span class="arch-text">│  │</span>
+<span class="arch-text">   │  └──┬───┘  └──┬───┘  └──┬───┘  │</span>
+<span class="arch-text">   │     └─────────┼─────────┘      │</span>
+<span class="arch-text">   │  ┌────────┐ ┌─┴────┐ ┌──────┐  │</span>
+<span class="arch-text">   │  │</span><span class="arch-highlight">Postgres</span><span class="arch-text">│ │</span><span class="arch-highlight">Redis </span><span class="arch-text">│ │</span><span class="arch-highlight">MinIO </span><span class="arch-text">│  │</span>
+<span class="arch-text">   │  └────────┘ └──────┘ └──────┘  │</span>
+<span class="arch-text">   │  ┌──────┐ ┌────────┐ ┌───────┐ │</span>
+<span class="arch-text">   │  │</span><span class="arch-accent2"> Loki </span><span class="arch-text">│ │</span><span class="arch-accent2">Promtail</span><span class="arch-text">│ │</span><span class="arch-accent2">Grafana</span><span class="arch-text">│ │</span>
+<span class="arch-text">   │  └──────┘ └────────┘ └───────┘ │</span>
+<span class="arch-text">   └─────────────────────────────────┘</span></div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section>
+    <div class="section-header">
+      <h2>Boring technology, done right</h2>
+      <p>Built on battle-tested tools you already know. No new abstractions to learn.</p>
+    </div>
+    <div class="stack-grid">
+      <div class="stack-item">Docker</div>
+      <div class="stack-item">GitHub Actions</div>
+      <div class="stack-item">Caddy</div>
+      <div class="stack-item">PostgreSQL</div>
+      <div class="stack-item">Redis</div>
+      <div class="stack-item">FastAPI</div>
+      <div class="stack-item">Next.js</div>
+      <div class="stack-item">MinIO (S3)</div>
+      <div class="stack-item">Grafana</div>
+      <div class="stack-item">Loki</div>
+      <div class="stack-item">Alembic</div>
+      <div class="stack-item">Debian 12</div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Ready to deploy?</h2>
+    <p>
+      Stop paying for PaaS. Own your infrastructure. Ship with confidence.
+    </p>
+    <div class="cta-buttons">
+      <a href="https://towlion.github.io/platform/tutorial/" class="btn btn-primary">
+        Follow the Tutorial
+      </a>
+      <a href="https://towlion.github.io/platform/" class="btn btn-secondary">
+        Platform Docs
+      </a>
+      <a href="https://github.com/towlion/app-template" class="btn btn-secondary">
+        App Template
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      <a href="https://github.com/towlion">Towlion</a> &mdash; MIT License &mdash;
+      <a href="https://towlion.github.io/platform/">Documentation</a>
+    </p>
+  </footer>
+</body>
+</html>
